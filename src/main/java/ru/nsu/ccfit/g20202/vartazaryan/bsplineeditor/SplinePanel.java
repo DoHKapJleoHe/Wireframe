@@ -5,17 +5,17 @@ import ru.nsu.ccfit.g20202.vartazaryan.utils.Point;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
+import java.awt.event.*;
 
-import static ru.nsu.ccfit.g20202.vartazaryan.utils.Constants.INDENT;
-import static ru.nsu.ccfit.g20202.vartazaryan.utils.Constants.RADIUS;
+import static ru.nsu.ccfit.g20202.vartazaryan.utils.Constants.*;
 
-public class SplinePanel extends JPanel implements MouseMotionListener, MouseListener
+public class SplinePanel extends JPanel implements MouseMotionListener, MouseListener, MouseWheelListener
 {
     // при зуме этот отсутп должен будет умножаться на коэффициент зума
     private BSpline bSpline;
+
+    private double zoom = 1.0;
+    private int INDENT = DEFAULT_INDENT;
 
     private int curX;
     private int curY;
@@ -31,6 +31,7 @@ public class SplinePanel extends JPanel implements MouseMotionListener, MouseLis
 
         addMouseListener(this);
         addMouseMotionListener(this);
+        addMouseWheelListener(this);
     }
 
     private void drawAxis(Graphics g)
@@ -62,11 +63,20 @@ public class SplinePanel extends JPanel implements MouseMotionListener, MouseLis
         g.setColor(Color.GREEN);
         var points = bSpline.getAnchorPoints();
 
-        int centerX = getWidth()/2;
-        int centerY = getHeight()/2;
-        for(Point p : points)
+        int centerX = getWidth() / 2;
+        int centerY = getHeight() / 2;
+        for (Point p : points)
         {
-            g.drawOval(centerX + p.getX() - RADIUS/2, centerY - p.getY() - RADIUS/2, RADIUS, RADIUS);
+            g.drawOval((int) (centerX + p.getX() * INDENT - RADIUS / 2), (int) (centerY - p.getY() * INDENT - RADIUS / 2), RADIUS, RADIUS);
+        }
+
+        g.setColor(Color.WHITE);
+        for(int i = 0; i < points.size() - 1; i++)
+        {
+            Point p1 = points.get(i);
+            Point p2 = points.get(i+1);
+            g.drawLine((int)( centerX + p1.getX()*INDENT), (int)(centerY - p1.getY()*INDENT),
+                       (int)( centerX + p2.getX()*INDENT), (int)(centerY - p2.getY()*INDENT));
         }
     }
 
@@ -80,16 +90,18 @@ public class SplinePanel extends JPanel implements MouseMotionListener, MouseLis
 
     @Override
     public void mouseDragged(MouseEvent e) {
-        int centerX = getWidth()/2;
-        int centerY = getHeight()/2;
+        double centerX = getWidth()/2;
+        double centerY = getHeight()/2;
 
         switch (curAction)
         {
             case POINT_MOVING -> {
-                System.out.println("Moving");
                 var curPoint = bSpline.getAnchorPoints().get(activePointIndex);
-                curPoint.setX(e.getX() - centerX);
-                curPoint.setY(centerY - e.getY());
+                curPoint.setX((e.getX() - centerX)/INDENT);
+                curPoint.setY((centerY - e.getY())/INDENT);
+            }
+            case CANVAS_MOVING -> {
+
             }
         }
 
@@ -102,8 +114,13 @@ public class SplinePanel extends JPanel implements MouseMotionListener, MouseLis
     }
 
     @Override
-    public void mouseClicked(MouseEvent e) {
+    public void mouseClicked(MouseEvent e)
+    {
+        double centerX = getWidth()/2;
+        double centerY = getHeight()/2;
 
+        bSpline.addAnchorPoint(new Point((e.getX() - centerX)/INDENT, (centerY - e.getY())/INDENT));
+        repaint();
     }
 
     @Override
@@ -121,20 +138,18 @@ public class SplinePanel extends JPanel implements MouseMotionListener, MouseLis
         int centerX = getWidth()/2;
         int centerY = getHeight()/2;
 
-        System.out.println("curX= " + curX + " curY= " + curY);
-
         int i = 0;
         for(Point p : anchorPoints)
         {
-            int globalX = p.getX() + centerX;
-            int globalY = centerY - p.getY();
-
-            System.out.println("GlobalX= "+globalX+" GlobalY= "+globalY);
+            double globalX = p.getX()*INDENT + centerX;
+            double globalY = centerY - p.getY()*INDENT;
 
             if(curX <= globalX+RADIUS && curX >= globalX-RADIUS && curY <= globalY+RADIUS && curY >= globalY-RADIUS)
             {
+                System.out.println("Point!");
                 activePointIndex = i;
                 curAction = Action.POINT_MOVING;
+                break;
             }
             i++;
         }
@@ -154,6 +169,13 @@ public class SplinePanel extends JPanel implements MouseMotionListener, MouseLis
     @Override
     public void mouseExited(MouseEvent e) {
 
+    }
+
+    @Override
+    public void mouseWheelMoved(MouseWheelEvent e) {
+        int koef = e.getWheelRotation();
+        INDENT -= koef;
+        repaint();
     }
 
     enum Action

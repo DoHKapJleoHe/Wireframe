@@ -5,23 +5,20 @@ import lombok.Getter;
 import java.util.ArrayList;
 import java.util.List;
 
-import static ru.nsu.ccfit.g20202.vartazaryan.utils.Constants.INDENT;
 
 public class BSpline
 {
-
+    private final double[][] M = {{-1/6, 3/6, -3/6, 1/6}, {3/6, -6/6, 3/6, 0}, {-3/6, 0, 3/6, 0}, {1/6, 4/6, 1/6, 0}};
     @Getter
-    private List<Point> anchorPoints = new ArrayList<>();
+    private final List<Point> anchorPoints = new ArrayList<>();
 
     public BSpline()
     {
-        addAnchorPoint(new Point(2*INDENT, 50));
-        addAnchorPoint(new Point(5*INDENT, 10));
+        addAnchorPoint(new Point(2, 5));
     }
 
     public void addAnchorPoint(Point point)
     {
         anchorPoints.add(point);
     }
-
 }
