@@ -1,7 +1,5 @@
 package ru.nsu.ccfit.g20202.vartazaryan.bsplineeditor;
 
-import ru.nsu.ccfit.g20202.vartazaryan.utils.BSpline;
-
 import javax.swing.*;
 import java.awt.*;
 

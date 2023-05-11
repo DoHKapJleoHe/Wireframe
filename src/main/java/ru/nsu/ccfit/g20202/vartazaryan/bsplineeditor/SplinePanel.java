@@ -1,6 +1,5 @@
 package ru.nsu.ccfit.g20202.vartazaryan.bsplineeditor;
 
-import ru.nsu.ccfit.g20202.vartazaryan.utils.BSpline;
 import ru.nsu.ccfit.g20202.vartazaryan.utils.Point;
 
 import javax.swing.*;
@@ -73,11 +72,40 @@ public class SplinePanel extends JPanel implements MouseMotionListener, MouseLis
         g.setColor(Color.WHITE);
         for(int i = 0; i < points.size() - 1; i++)
         {
-            Point p1 = points.get(i);
-            Point p2 = points.get(i+1);
-            g.drawLine((int)( centerX + p1.getX()*INDENT), (int)(centerY - p1.getY()*INDENT),
-                       (int)( centerX + p2.getX()*INDENT), (int)(centerY - p2.getY()*INDENT));
+            Point p1 = convertToScreen(points.get(i));
+            Point p2 = convertToScreen(points.get(i+1));
+
+            g.drawLine((int) p1.getX(), (int) p1.getY(), (int) p2.getX(), (int) p2.getY());
         }
+    }
+
+    private void drawSpline(Graphics g)
+    {
+        g.setColor(Color.RED);
+        var points = bSpline.getSplinePoints();
+        if (points == null)
+            return;
+        if(points.size() < 4)
+            return;
+
+        for(int i = 0; i < points.size() - 1; i++)
+        {
+            Point p1 = convertToScreen(points.get(i));
+            Point p2 = convertToScreen(points.get(i+1));
+
+            g.drawLine((int) p1.getX(), (int) p1.getY(), (int) p2.getX(), (int) p2.getY());
+        }
+    }
+
+    private Point convertToScreen(Point p)
+    {
+        int centerX = getWidth() / 2;
+        int centerY = getHeight() / 2;
+
+        double x = centerX + p.getX()*INDENT;
+        double y = centerY - p.getY()*INDENT;
+
+        return new Point(x, y);
     }
 
     public void paintComponent(Graphics g)
@@ -86,6 +114,7 @@ public class SplinePanel extends JPanel implements MouseMotionListener, MouseLis
 
         drawAxis(g);
         drawSplineAnchorPoints(g);
+        drawSpline(g);
     }
 
     @Override
@@ -99,6 +128,7 @@ public class SplinePanel extends JPanel implements MouseMotionListener, MouseLis
                 var curPoint = bSpline.getAnchorPoints().get(activePointIndex);
                 curPoint.setX((e.getX() - centerX)/INDENT);
                 curPoint.setY((centerY - e.getY())/INDENT);
+                bSpline.createBSpline();
             }
             case CANVAS_MOVING -> {
 
