@@ -47,6 +47,11 @@ public class BSpline
         createBSpline();
     }
 
+    public void deleteAnchorPoint()
+    {
+        anchorPoints.remove(anchorPoints.size() - 1);
+    }
+
     public void createBSpline()
     {
         splinePoints = new ArrayList<>(); //each time we create b-spline we have to create new array of points

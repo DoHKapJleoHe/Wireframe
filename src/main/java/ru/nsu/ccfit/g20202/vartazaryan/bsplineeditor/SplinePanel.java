@@ -6,7 +6,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
-import static ru.nsu.ccfit.g20202.vartazaryan.utils.Constants.*;
+import static ru.nsu.ccfit.g20202.vartazaryan.utils.Settings.*;
 
 public class SplinePanel extends JPanel implements MouseMotionListener, MouseListener, MouseWheelListener
 {
@@ -21,12 +21,19 @@ public class SplinePanel extends JPanel implements MouseMotionListener, MouseLis
     private int activePointIndex;
     private Action curAction = Action.NOTHING;
 
+    private final JScrollPane scrollPane = new JScrollPane();
+    private int width = 640;
+    private int height = 240;
+
     public SplinePanel(BSpline spline)
     {
-        setPreferredSize(new Dimension(640, 240));
+        setPreferredSize(new Dimension(width, height));
         setBackground(Color.BLACK);
 
         bSpline = spline;
+        scrollPane.setMaximumSize(new Dimension(width, height));
+        scrollPane.setViewportView(this);
+        scrollPane.revalidate();
 
         addMouseListener(this);
         addMouseMotionListener(this);
@@ -108,6 +115,7 @@ public class SplinePanel extends JPanel implements MouseMotionListener, MouseLis
         return new Point(x, y);
     }
 
+    @Override
     public void paintComponent(Graphics g)
     {
         super.paintComponent(g);
@@ -131,7 +139,32 @@ public class SplinePanel extends JPanel implements MouseMotionListener, MouseLis
                 bSpline.createBSpline();
             }
             case CANVAS_MOVING -> {
+                int dx = curX - e.getX();
+                int dy = curY - e.getY();
 
+                Dimension panelSize = new Dimension(getWidth(), getHeight());
+                java.awt.Point viewPos = scrollPane.getViewport().getViewPosition();
+                int maxX = viewPos.x + scrollPane.getViewport().getWidth();
+                int maxY = viewPos.y + scrollPane.getViewport().getHeight();
+
+                if (dx < 0 && viewPos.x == 0) {
+                    width -= dx;
+                    centerX -= dx;
+                    curX -= dx;
+                } else if (dx >= 0 && maxX == panelSize.width) {
+                    width += dx;
+                }
+
+                if (dy < 0 && viewPos.y == 0) {
+                    height -= dy;
+                    centerY -= dy;
+                    curY -= dy;
+                } else if (dy >= 0 && maxY == panelSize.height) {
+                    height += dy;
+                }
+
+                scrollPane.getHorizontalScrollBar().setValue(viewPos.x + dx);
+                scrollPane.getVerticalScrollBar().setValue(viewPos.y + dy);
             }
         }
 
@@ -149,7 +182,12 @@ public class SplinePanel extends JPanel implements MouseMotionListener, MouseLis
         double centerX = getWidth()/2;
         double centerY = getHeight()/2;
 
-        bSpline.addAnchorPoint(new Point((e.getX() - centerX)/INDENT, (centerY - e.getY())/INDENT));
+        if(e.getButton() == MouseEvent.BUTTON1)
+            bSpline.addAnchorPoint(new Point((e.getX() - centerX)/INDENT, (centerY - e.getY())/INDENT));
+        if(e.getButton() == MouseEvent.BUTTON3)
+            bSpline.deleteAnchorPoint();
+
+        bSpline.createBSpline();
         repaint();
     }
 
@@ -183,6 +221,8 @@ public class SplinePanel extends JPanel implements MouseMotionListener, MouseLis
             }
             i++;
         }
+
+        //curAction = Action.CANVAS_MOVING;
     }
 
     @Override
