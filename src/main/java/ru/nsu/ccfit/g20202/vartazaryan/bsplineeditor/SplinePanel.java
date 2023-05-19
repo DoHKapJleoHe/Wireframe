@@ -1,6 +1,6 @@
 package ru.nsu.ccfit.g20202.vartazaryan.bsplineeditor;
 
-import ru.nsu.ccfit.g20202.vartazaryan.utils.Point;
+import ru.nsu.ccfit.g20202.vartazaryan.utils.Point2D;
 
 import javax.swing.*;
 import java.awt.*;
@@ -67,11 +67,11 @@ public class SplinePanel extends JPanel implements MouseMotionListener, MouseLis
     private void drawSplineAnchorPoints(Graphics g)
     {
         g.setColor(Color.GREEN);
-        var points = bSpline.getAnchorPoints();
+        var points = bSpline.getAnchorPoint2DS();
 
         int centerX = getWidth() / 2;
         int centerY = getHeight() / 2;
-        for (Point p : points)
+        for (Point2D p : points)
         {
             g.drawOval((int) (centerX + p.getX() * INDENT - RADIUS / 2), (int) (centerY - p.getY() * INDENT - RADIUS / 2), RADIUS, RADIUS);
         }
@@ -79,8 +79,8 @@ public class SplinePanel extends JPanel implements MouseMotionListener, MouseLis
         g.setColor(Color.WHITE);
         for(int i = 0; i < points.size() - 1; i++)
         {
-            Point p1 = convertToScreen(points.get(i));
-            Point p2 = convertToScreen(points.get(i+1));
+            Point2D p1 = convertToScreen(points.get(i));
+            Point2D p2 = convertToScreen(points.get(i+1));
 
             g.drawLine((int) p1.getX(), (int) p1.getY(), (int) p2.getX(), (int) p2.getY());
         }
@@ -97,14 +97,14 @@ public class SplinePanel extends JPanel implements MouseMotionListener, MouseLis
 
         for(int i = 0; i < points.size() - 1; i++)
         {
-            Point p1 = convertToScreen(points.get(i));
-            Point p2 = convertToScreen(points.get(i+1));
+            Point2D p1 = convertToScreen(points.get(i));
+            Point2D p2 = convertToScreen(points.get(i+1));
 
             g.drawLine((int) p1.getX(), (int) p1.getY(), (int) p2.getX(), (int) p2.getY());
         }
     }
 
-    private Point convertToScreen(Point p)
+    private Point2D convertToScreen(Point2D p)
     {
         int centerX = getWidth() / 2;
         int centerY = getHeight() / 2;
@@ -112,7 +112,13 @@ public class SplinePanel extends JPanel implements MouseMotionListener, MouseLis
         double x = centerX + p.getX()*INDENT;
         double y = centerY - p.getY()*INDENT;
 
-        return new Point(x, y);
+        return new Point2D(x, y);
+    }
+
+    public void recreateSpline()
+    {
+        bSpline.createBSpline();
+        repaint();
     }
 
     @Override
@@ -133,7 +139,7 @@ public class SplinePanel extends JPanel implements MouseMotionListener, MouseLis
         switch (curAction)
         {
             case POINT_MOVING -> {
-                var curPoint = bSpline.getAnchorPoints().get(activePointIndex);
+                var curPoint = bSpline.getAnchorPoint2DS().get(activePointIndex);
                 curPoint.setX((e.getX() - centerX)/INDENT);
                 curPoint.setY((centerY - e.getY())/INDENT);
                 bSpline.createBSpline();
@@ -183,7 +189,7 @@ public class SplinePanel extends JPanel implements MouseMotionListener, MouseLis
         double centerY = getHeight()/2;
 
         if(e.getButton() == MouseEvent.BUTTON1)
-            bSpline.addAnchorPoint(new Point((e.getX() - centerX)/INDENT, (centerY - e.getY())/INDENT));
+            bSpline.addAnchorPoint(new Point2D((e.getX() - centerX)/INDENT, (centerY - e.getY())/INDENT));
         if(e.getButton() == MouseEvent.BUTTON3)
             bSpline.deleteAnchorPoint();
 
@@ -202,12 +208,12 @@ public class SplinePanel extends JPanel implements MouseMotionListener, MouseLis
 
     private void checkPoint()
     {
-        var anchorPoints = bSpline.getAnchorPoints();
+        var anchorPoints = bSpline.getAnchorPoint2DS();
         int centerX = getWidth()/2;
         int centerY = getHeight()/2;
 
         int i = 0;
-        for(Point p : anchorPoints)
+        for(Point2D p : anchorPoints)
         {
             double globalX = p.getX()*INDENT + centerX;
             double globalY = centerY - p.getY()*INDENT;

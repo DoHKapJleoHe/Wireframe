@@ -3,7 +3,7 @@ package ru.nsu.ccfit.g20202.vartazaryan.utils;
 import lombok.Getter;
 import lombok.Setter;
 
-public class Point
+public class Point2D
 {
     @Setter
     @Getter
@@ -12,7 +12,7 @@ public class Point
     @Getter
     private double y;
 
-    public Point(double x, double y)
+    public Point2D(double x, double y)
     {
         this.x = x;
         this.y = y;

@@ -17,10 +17,12 @@ public class WireframeFrame extends JFrame
         setMinimumSize(new Dimension(width, height));
 
         add(wireframePanel);
+
         setVisible(true);
     }
 
     public void createWireframe() {
         wireframePanel.createWireframe();
     }
+
 }

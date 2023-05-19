@@ -1,5 +1,7 @@
 package ru.nsu.ccfit.g20202.vartazaryan.utils;
 
+import lombok.Setter;
+
 public class Settings
 {
     /**
@@ -16,5 +18,17 @@ public class Settings
     /**
      * This is number of longitudinal generatrix
      */
-    public static int GENERATRIX_NUM = 10;
+    @Setter
+    public static int GENERATRIX_NUM = 5;
+
+    @Setter
+    public static int CIRCLES_NUM = 4;
+
+    @Setter
+    public static int CIRCLES_ACCURACY = 3;
+
+    /**
+     * The number of segments into which the segment [0, 1] will be divided
+     */
+    public static int SEGMENTS_NUM = 10;
 }

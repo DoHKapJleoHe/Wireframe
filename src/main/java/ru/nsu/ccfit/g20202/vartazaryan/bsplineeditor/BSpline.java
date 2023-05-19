@@ -3,33 +3,29 @@ package ru.nsu.ccfit.g20202.vartazaryan.bsplineeditor;
 import lombok.Getter;
 import lombok.Setter;
 import ru.nsu.ccfit.g20202.vartazaryan.utils.Matrix;
-import ru.nsu.ccfit.g20202.vartazaryan.utils.Point;
+import ru.nsu.ccfit.g20202.vartazaryan.utils.Point2D;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import static ru.nsu.ccfit.g20202.vartazaryan.utils.Settings.SEGMENTS_NUM;
+
 
 public class BSpline
 {
-    /**
-     * The number of segments into which the segment [0, 1] will be divided
-     */
-    @Getter
-    @Setter
-    private int segmentsNum = 10;
     private final Matrix splineMatrix;
 
     /**
      * Points that will help approximating b-spline
      */
     @Getter
-    private final List<Point> anchorPoints = new ArrayList<>();
+    private final List<Point2D> anchorPoint2DS = new ArrayList<>();
 
     /**
      * This is points that will approximate b-spline piece
      */
     @Getter
-    private ArrayList<Point> splinePoints;
+    private ArrayList<Point2D> splinePoints;
 
     public BSpline()
     {
@@ -41,23 +37,23 @@ public class BSpline
         });
     }
 
-    public void addAnchorPoint(Point point)
+    public void addAnchorPoint(Point2D point2D)
     {
-        anchorPoints.add(point);
+        anchorPoint2DS.add(point2D);
         createBSpline();
     }
 
     public void deleteAnchorPoint()
     {
-        anchorPoints.remove(anchorPoints.size() - 1);
+        anchorPoint2DS.remove(anchorPoint2DS.size() - 1);
     }
 
     public void createBSpline()
     {
         splinePoints = new ArrayList<>(); //each time we create b-spline we have to create new array of points
-        int anchorPointsNum = anchorPoints.size();
+        int anchorPointsNum = anchorPoint2DS.size();
 
-        double step = (double)1/segmentsNum; // step between each part of [0, 1] segment
+        double step = (double)1/SEGMENTS_NUM; // step between each part of [0, 1] segment
         double x, y;
 
         if(anchorPointsNum < 4)
@@ -77,17 +73,17 @@ public class BSpline
                 multiplied with M.
             */
             double[] xCoords = {
-                    anchorPoints.get(i-1).getX(),
-                    anchorPoints.get(i).getX(),
-                    anchorPoints.get(i+1).getX(),
-                    anchorPoints.get(i+2).getX()
+                    anchorPoint2DS.get(i-1).getX(),
+                    anchorPoint2DS.get(i).getX(),
+                    anchorPoint2DS.get(i+1).getX(),
+                    anchorPoint2DS.get(i+2).getX()
             };
 
             double[] yCoords = {
-                    anchorPoints.get(i-1).getY(),
-                    anchorPoints.get(i).getY(),
-                    anchorPoints.get(i+1).getY(),
-                    anchorPoints.get(i+2).getY()
+                    anchorPoint2DS.get(i-1).getY(),
+                    anchorPoint2DS.get(i).getY(),
+                    anchorPoint2DS.get(i+1).getY(),
+                    anchorPoint2DS.get(i+2).getY()
             };
 
             double[] xVector = splineMatrix.multiplyMatrixVector(xCoords);
@@ -100,13 +96,13 @@ public class BSpline
                 I take each number from [0, 1] division and calculate this polynomial(for x-coords and y-coords)
             */
             double t = 0.0;
-            for(int k = 0; k < segmentsNum; k++)
+            for(int k = 0; k <= SEGMENTS_NUM; k++)
             {
                 t = 0.0 + k*step;
                 x = t*t*t*xVector[0] + t*t*xVector[1] + t*xVector[2] + xVector[3];
                 y = t*t*t*yVector[0] + t*t*yVector[1] + t*yVector[2] + yVector[3];
 
-                splinePoints.add(new Point(x, y));
+                splinePoints.add(new Point2D(x, y));
             }
         }
     }

@@ -1,22 +1,17 @@
 package ru.nsu.ccfit.g20202.vartazaryan.wireframe;
 
 import ru.nsu.ccfit.g20202.vartazaryan.bsplineeditor.BSpline;
-import ru.nsu.ccfit.g20202.vartazaryan.utils.Matrix;
+import ru.nsu.ccfit.g20202.vartazaryan.utils.Point2D;
 import ru.nsu.ccfit.g20202.vartazaryan.utils.Vector4;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.ArrayList;
-import java.util.List;
-
-import static ru.nsu.ccfit.g20202.vartazaryan.utils.Settings.GENERATRIX_NUM;
 
 public class WireframePanel extends JPanel implements MouseListener, MouseMotionListener, MouseWheelListener
 {
     private Wireframe wireframe;
     private BSpline bSpline;
-    private List<Vector4> cubePoints = new ArrayList<>();
 
     private Point prevPoint;
 
@@ -26,17 +21,10 @@ public class WireframePanel extends JPanel implements MouseListener, MouseMotion
         this.wireframe = new Wireframe();
         setBackground(Color.WHITE);
 
-        cubePoints.add(new Vector4(1.0, 1.0, 1.0, 1.0));
-        cubePoints.add(new Vector4(1.0, 1.0, -1.0, 1.0));
-        cubePoints.add(new Vector4(1.0, -1.0, 1.0, 1.0));
-        cubePoints.add(new Vector4(1.0, -1.0, -1.0, 1.0));
-        cubePoints.add(new Vector4(-1.0, 1.0, 1.0, 1.0));
-        cubePoints.add(new Vector4(-1.0, 1.0, -1.0, 1.0));
-        cubePoints.add(new Vector4(-1.0, -1.0, 1.0, 1.0));
-        cubePoints.add(new Vector4(-1.0, -1.0, -1.0, 1.0));
 
         addMouseListener(this);
         addMouseMotionListener(this);
+        addMouseWheelListener(this);
     }
 
     @Override
@@ -44,77 +32,46 @@ public class WireframePanel extends JPanel implements MouseListener, MouseMotion
     {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
-        g2d.setStroke(new BasicStroke(4));
-
-        Matrix wireframeTransform = wireframe.getTranslateMatrix();
-        Matrix cameraTransform = wireframe.getCameraTranslateMatrix();
-        Matrix cameraPerspectiveMatrix = wireframe.getCameraPerspectiveMatrix();
-        Matrix rotationMatrix = wireframe.getRotationMatrix();
-        List<Vector4> wireframePoints = new ArrayList<>();
-
-        System.out.println("Transform");
-        System.out.println(wireframeTransform.toString());
-        System.out.println("Rotate");
-        System.out.println(rotationMatrix.toString());
+        g2d.setStroke(new BasicStroke(2));
 
         int centerX = getWidth()/2;
         int centerY = getHeight()/2;
 
-        for(Vector4 v : cubePoints)
+        if (bSpline.getAnchorPoint2DS().size() < 4 || bSpline.getSplinePoints() == null)
         {
-            Vector4 planePoint;
-
-            planePoint = wireframeTransform.multiplyMatrixVector(v);
-            //planePoint = rotationMatrix.multiplyMatrixVector(planePoint);
-            planePoint = cameraTransform.multiplyMatrixVector(planePoint);
-            planePoint = cameraPerspectiveMatrix.multiplyMatrixVector(planePoint);
+            var cube = wireframe.getCube();
+            var cubePoints = cube.get(0);
+            var cubeEdges = cube.get(1);
 
 
-            wireframePoints.add(planePoint);
-            //g2d.drawOval((int) (centerX + planePoint.getX()*200), (int) (centerY - planePoint.getY()*200), 5, 5);
-        }
-
-        for(int i = 0; i < cubePoints.size(); i++)
-        {
-            for(int j = i + 1; j < cubePoints.size(); j++)
+            for(Point2D e : cubeEdges)
             {
-                int diff = 0;
-                if(Math.abs(cubePoints.get(i).getX() - cubePoints.get(j).getX()) == 2)
-                    diff++;
-                if(Math.abs(cubePoints.get(i).getY() - cubePoints.get(j).getY()) == 2)
-                    diff++;
-                if(Math.abs(cubePoints.get(i).getZ() - cubePoints.get(j).getZ()) == 2)
-                    diff++;
-
-                if (diff == 1)
-                    g2d.drawLine(
-                            (int) (centerX + wireframePoints.get(i).getX()*200),
-                            (int) (centerY - wireframePoints.get(i).getY()*200),
-                            (int) (centerX + wireframePoints.get(j).getX()*200),
-                            (int) (centerY - wireframePoints.get(j).getY()*200)
-                    );
+                // e contains 2 points with coords meaning 2 points from cube points
+                // e.getX() - first Point, e.getY() - second Point
+                g2d.drawLine(
+                        (int) (centerX + cubePoints.get((int) e.getX()).getX()*200), (int) (centerY - cubePoints.get((int) e.getX()).getY()*200),
+                        (int) (centerX + cubePoints.get((int) e.getY()).getX()*200), (int) (centerY - cubePoints.get((int) e.getY()).getY()*200)
+                );
             }
         }
-
-
-        /*var points = bSpline.getSplinePoints();
-        if(points == null)
-            return;
-
-        double angle = (double)360/GENERATRIX_NUM;
-        double curAngle = 0.0;
-
-        for(int i = 0; i < GENERATRIX_NUM; i++)
+        else
         {
-            Point prevPoint = null;
-            Point curPoint = null;
-            curAngle = i * angle;
+            wireframe.createWireframePoints(bSpline.getSplinePoints());
+            var points = wireframe.getWireframePoints();
+            var edges = wireframe.getEdges();
 
-            for(Point p : points)
+            g2d.setColor(Color.BLACK);
+            for(int i = 0; i < edges.size(); i +=2)
             {
-                curPoint = wireframe.createWireframePoint(p);
+                var p1 = points.get(edges.get(i));
+                var p2 = points.get(edges.get(i+1));
+
+                g2d.drawLine(
+                        (int) (centerX + p1.getX()*200), (int) (centerY - p1.getY()*200),
+                        (int) (centerX + p2.getX()*200), (int) (centerY - p2.getY()*200)
+                );
             }
-        }*/
+        }
     }
 
     @Override
@@ -157,7 +114,8 @@ public class WireframePanel extends JPanel implements MouseListener, MouseMotion
 
     @Override
     public void mouseWheelMoved(MouseWheelEvent e) {
-
+        //wireframe.setNearClip(e.getWheelRotation());
+        repaint();
     }
 
     public void createWireframe() {
